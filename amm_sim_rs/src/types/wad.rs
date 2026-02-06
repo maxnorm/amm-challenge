@@ -2,7 +2,7 @@
 //!
 //! WAD is the standard fixed-point representation used in DeFi:
 //! - 1 WAD = 1e18
-//! - Fees: 25 bps = 0.0025 = 25e14 WAD
+//! - Fees: 30 bps = 0.003 = 30e14 WAD
 //! - Max fee: 10% = 0.1 = 1e17 WAD
 
 use std::ops::{Add, Sub, Mul, Div, Neg};

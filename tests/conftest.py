@@ -14,6 +14,6 @@ def vanilla_bytecode_and_abi():
 
 @pytest.fixture
 def vanilla_strategy(vanilla_bytecode_and_abi):
-    """Create a fresh VanillaStrategy instance (25 bps)."""
+    """Create a fresh VanillaStrategy instance (30 bps)."""
     bytecode, abi = vanilla_bytecode_and_abi
     return EVMStrategyAdapter(bytecode=bytecode, abi=abi)

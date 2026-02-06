@@ -16,7 +16,7 @@ class TradeSide(Enum):
 class FeeQuote:
     """Fee quote returned by an AMM strategy.
 
-    Fees are expressed as decimals (e.g., 0.0025 = 25bps).
+    Fees are expressed as decimals (e.g., 0.003 = 30bps).
     """
     bid_fee: Decimal  # Fee when AMM buys X
     ask_fee: Decimal  # Fee when AMM sells X

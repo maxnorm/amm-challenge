@@ -11,10 +11,10 @@ from amm_competition.core.trade import FeeQuote, TradeInfo
 class ZeroFeeStrategy(AMMStrategy):
     """Minimal zero-fee strategy for testing fee-less behavior."""
 
-    def initialize(self, initial_x: Decimal, initial_y: Decimal) -> FeeQuote:
+    def after_initialize(self, initial_x: Decimal, initial_y: Decimal) -> FeeQuote:
         return FeeQuote.symmetric(Decimal("0"))
 
-    def on_trade(self, trade: TradeInfo) -> FeeQuote:
+    def after_swap(self, trade: TradeInfo) -> FeeQuote:
         return FeeQuote.symmetric(Decimal("0"))
 
     def get_name(self) -> str:
@@ -88,10 +88,10 @@ class TestAMM:
 
     def test_quote_with_fees(self, amm):
         """Test that fees are applied correctly."""
-        # 25bps = 0.0025
+        # 30bps = 0.003
         quote = amm.get_quote_buy_x(Decimal("10"))
         assert quote is not None
-        assert quote.fee_rate == Decimal("0.0025")
+        assert quote.fee_rate == Decimal("0.003")
         assert quote.fee_amount > 0
         # Net output should be less than gross
         gross = Decimal("10000") - Decimal("1000000") / Decimal("110")
@@ -168,13 +168,13 @@ class TestAMM:
 
 class TestVanillaStrategy:
     def test_fixed_fees(self, vanilla_strategy):
-        fees = vanilla_strategy.initialize(Decimal("100"), Decimal("10000"))
+        fees = vanilla_strategy.after_initialize(Decimal("100"), Decimal("10000"))
 
-        assert fees.bid_fee == Decimal("0.0025")
-        assert fees.ask_fee == Decimal("0.0025")
+        assert fees.bid_fee == Decimal("0.003")
+        assert fees.ask_fee == Decimal("0.003")
 
-    def test_fees_unchanged_on_trade(self, vanilla_strategy):
-        vanilla_strategy.initialize(Decimal("100"), Decimal("10000"))
+    def test_fees_unchanged_after_swap(self, vanilla_strategy):
+        vanilla_strategy.after_initialize(Decimal("100"), Decimal("10000"))
 
         trade = TradeInfo(
             side="buy",
@@ -185,9 +185,9 @@ class TestVanillaStrategy:
             reserve_y=Decimal("9100"),
         )
 
-        fees = vanilla_strategy.on_trade(trade)
-        assert fees.bid_fee == Decimal("0.0025")
-        assert fees.ask_fee == Decimal("0.0025")
+        fees = vanilla_strategy.after_swap(trade)
+        assert fees.bid_fee == Decimal("0.003")
+        assert fees.ask_fee == Decimal("0.003")
 
     def test_name(self, vanilla_strategy):
-        assert vanilla_strategy.get_name() == "Vanilla_25bps"
+        assert vanilla_strategy.get_name() == "Vanilla_30bps"

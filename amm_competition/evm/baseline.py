@@ -1,4 +1,4 @@
-"""Utility to load the default 25bps strategy used as the normalizer AMM."""
+"""Utility to load the default 30bps strategy used as the normalizer AMM."""
 
 from pathlib import Path
 from typing import Optional, Tuple
@@ -33,13 +33,13 @@ def get_vanilla_bytecode_and_abi() -> Tuple[bytes, list]:
 
 
 def load_vanilla_strategy() -> EVMStrategyAdapter:
-    """Load the default 25bps strategy used as the normalizer AMM.
+    """Load the default 30bps strategy used as the normalizer AMM.
 
     The normalizer AMM prevents degenerate strategies (like extreme fees)
     from appearing profitable by providing competition for retail flow.
 
     Returns:
-        EVMStrategyAdapter wrapping the compiled VanillaStrategy.sol (25 bps).
+        EVMStrategyAdapter wrapping the compiled VanillaStrategy.sol (30 bps).
     """
     bytecode, abi = get_vanilla_bytecode_and_abi()
     return EVMStrategyAdapter(bytecode=bytecode, abi=abi)

@@ -1,5 +1,6 @@
 """Tests for market simulation components."""
 
+import math
 import pytest
 from decimal import Decimal
 
@@ -8,6 +9,21 @@ from amm_competition.market.retail import RetailTrader
 from amm_competition.market.arbitrageur import Arbitrageur
 from amm_competition.market.router import OrderRouter
 from amm_competition.core.amm import AMM
+from amm_competition.core.interfaces import AMMStrategy
+from amm_competition.core.trade import FeeQuote, TradeInfo
+
+
+class FixedFeeStrategy(AMMStrategy):
+    """Simple non-EVM strategy for tests."""
+
+    def __init__(self, bid_fee: Decimal, ask_fee: Decimal):
+        self._fees = FeeQuote(bid_fee=bid_fee, ask_fee=ask_fee)
+
+    def after_initialize(self, initial_x: Decimal, initial_y: Decimal) -> FeeQuote:
+        return self._fees
+
+    def after_swap(self, trade: TradeInfo) -> FeeQuote:
+        return self._fees
 
 
 class TestGBMPriceProcess:
@@ -110,7 +126,7 @@ class TestArbitrageur:
         """No arbitrage when AMM price equals fair price."""
         arb = Arbitrageur()
         result = arb.find_arb_opportunity(amm, fair_price=Decimal("100"))
-        # With 25bps fees, small price differences don't create arb
+        # With 30bps fees, small price differences don't create arb
         # At exact fair price, no arb
         assert result is None
 
@@ -141,6 +157,56 @@ class TestArbitrageur:
 
         # Reserves should have changed
         assert amm.reserve_x != initial_x
+
+    def test_buy_arb_sizes_trade_accounting_for_fee(self):
+        """Buy-side arb sizing should match fee-on-input closed form."""
+        fee = Decimal("0.05")  # 5% to make the difference visible
+        amm = AMM(
+            strategy=FixedFeeStrategy(bid_fee=fee, ask_fee=fee),
+            reserve_x=Decimal("1000"),
+            reserve_y=Decimal("1000"),
+        )
+        amm.initialize()
+
+        arb = Arbitrageur()
+        fair_price = Decimal("1.2")
+        result = arb.find_arb_opportunity(amm, fair_price=fair_price)
+        assert result is not None
+        assert result.side == "sell"  # AMM sells X
+
+        x = float(amm.reserve_x)
+        y = float(amm.reserve_y)
+        k = x * y
+        gamma = 1.0 - float(fee)
+        p = float(fair_price)
+        expected_x_out = x - math.sqrt(k / (gamma * p))
+
+        assert abs(float(result.amount_x) - expected_x_out) / expected_x_out < 1e-9
+
+    def test_sell_arb_sizes_trade_accounting_for_fee(self):
+        """Sell-side arb sizing should match fee-on-input closed form."""
+        fee = Decimal("0.05")  # 5% to make the difference visible
+        amm = AMM(
+            strategy=FixedFeeStrategy(bid_fee=fee, ask_fee=fee),
+            reserve_x=Decimal("1000"),
+            reserve_y=Decimal("1000"),
+        )
+        amm.initialize()
+
+        arb = Arbitrageur()
+        fair_price = Decimal("0.9")
+        result = arb.find_arb_opportunity(amm, fair_price=fair_price)
+        assert result is not None
+        assert result.side == "buy"  # AMM buys X
+
+        x = float(amm.reserve_x)
+        y = float(amm.reserve_y)
+        k = x * y
+        gamma = 1.0 - float(fee)
+        p = float(fair_price)
+        expected_x_in = (math.sqrt(k * gamma / p) - x) / gamma
+
+        assert abs(float(result.amount_x) - expected_x_in) / expected_x_in < 1e-9
 
 
 class TestOrderRouter:
@@ -177,7 +243,7 @@ class TestOrderRouter:
         splits = router.compute_optimal_split_buy(amms, Decimal("1000"))
         assert len(splits) == 2
 
-        # Both AMMs have same 25bps fee, so split should be roughly equal
+        # Both AMMs have same 30bps fee, so split should be roughly equal
         assert all(s[1] > 0 for s in splits)
 
     def test_routes_sell_to_better_price(self, amms):
@@ -187,5 +253,5 @@ class TestOrderRouter:
         splits = router.compute_optimal_split_sell(amms, Decimal("10"))
         assert len(splits) == 2
 
-        # Both AMMs have same 25bps fee, so split should be roughly equal
+        # Both AMMs have same 30bps fee, so split should be roughly equal
         assert all(s[1] > 0 for s in splits)

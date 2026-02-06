@@ -22,9 +22,9 @@ class Arbitrageur:
     """Finds and executes optimal arbitrage trades.
 
     Uses closed-form solutions for constant product AMMs.
-    For reserves (x, y), k=xy, fee f, and fair price p:
-    - Buy X from AMM: Δx = x - sqrt(k*(1+f)/p)  (profit-maximizing)
-    - Sell X to AMM: Δx = sqrt(k*(1-f)/p) - x   (profit-maximizing)
+    For reserves (x, y), k=xy, fee f (fee-on-input), γ = 1 - f, and fair price p (Y per X):
+    - Buy X from AMM (AMM sells X): Δx_out = x - sqrt(k / (γ·p))  (profit-maximizing)
+    - Sell X to AMM (AMM buys X): Δx_in = (sqrt(k·γ / p) - x) / γ (profit-maximizing, Δx_in is gross input)
     """
 
     def find_arb_opportunity(
@@ -57,7 +57,7 @@ class Arbitrageur:
         """Compute optimal trade when buying X from AMM (AMM sells X).
 
         Maximize profit = Δx * p - Y_paid
-        Closed-form: Δx = x - sqrt(k*(1+f)/p)
+        Closed-form (fee-on-input): Δx_out = x - sqrt(k / (γ·p))
         """
         # Use float for fast math
         x_f = float(amm.reserve_x)
@@ -66,8 +66,12 @@ class Arbitrageur:
         f_f = float(amm.current_fees.ask_fee)
         p_f = float(fair_price)
 
+        gamma = 1.0 - f_f
+        if gamma <= 0.0 or p_f <= 0.0:
+            return None
+
         # Optimal trade size using float
-        new_x_f = math.sqrt(k_f * (1.0 + f_f) / p_f)
+        new_x_f = math.sqrt(k_f / (gamma * p_f))
         amount_x_f = x_f - new_x_f
 
         if amount_x_f <= 0:
@@ -101,7 +105,7 @@ class Arbitrageur:
         """Compute optimal trade when selling X to AMM (AMM buys X).
 
         Maximize profit = Y_received - Δx * p
-        Closed-form: Δx = sqrt(k*(1-f)/p) - x
+        Closed-form (fee-on-input): Δx_in = (sqrt(k·γ / p) - x) / γ
         """
         # Use float for fast math
         x_f = float(amm.reserve_x)
@@ -110,9 +114,15 @@ class Arbitrageur:
         f_f = float(amm.current_fees.bid_fee)
         p_f = float(fair_price)
 
-        # Optimal trade size using float
-        new_x_f = math.sqrt(k_f * (1.0 - f_f) / p_f)
-        amount_x_f = new_x_f - x_f
+        gamma = 1.0 - f_f
+        if gamma <= 0.0 or p_f <= 0.0:
+            return None
+
+        # Optimal trade size (gross input) using float:
+        # x + γ·Δx_in = sqrt(k·γ/p)  =>  Δx_in = (sqrt(k·γ/p) - x) / γ
+        x_virtual_f = math.sqrt(k_f * gamma / p_f)
+        net_x_f = x_virtual_f - x_f
+        amount_x_f = net_x_f / gamma
 
         if amount_x_f <= 0:
             return None

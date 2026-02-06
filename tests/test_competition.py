@@ -180,7 +180,7 @@ class TestMatchRunner:
 
         assert result.total_games == 5
         assert result.wins_a + result.wins_b + result.draws == 5
-        assert result.strategy_a == "Vanilla_25bps"
+        assert result.strategy_a == "Vanilla_30bps"
         assert result.strategy_b == "Vanilla_30bps"
 
     def test_match_winner(self, vanilla_bytecode_and_abi):
@@ -336,8 +336,8 @@ class TestMatchRunner:
         strategy_a = EVMStrategyAdapter(bytecode=bytecode, abi=abi)
         strategy_b = EVMStrategyAdapter(bytecode=bytecode, abi=abi)
 
-        # Both should return "Vanilla_25bps" from get_name()
-        assert strategy_a.get_name() == strategy_b.get_name() == "Vanilla_25bps"
+        # Both should return "Vanilla_30bps" from get_name()
+        assert strategy_a.get_name() == strategy_b.get_name() == "Vanilla_30bps"
 
         result = runner.run_match(strategy_a, strategy_b, store_results=True)
 
