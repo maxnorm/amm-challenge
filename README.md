@@ -93,6 +93,12 @@ The normalizer also means there's no "free lunch"—you can't beat 30 bps just b
 **Start with `contracts/src/StarterStrategy.sol`** — a simple 50 bps fixed-fee strategy. Copy it, rename `getName()`, and modify the fee logic.
 
 ```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {AMMStrategyBase} from "./AMMStrategyBase.sol";
+import {TradeInfo} from "./IAMMStrategy.sol";
+
 contract Strategy is AMMStrategyBase {
     function afterInitialize(uint256 initialX, uint256 initialY)
         external override returns (uint256 bidFee, uint256 askFee);
@@ -125,6 +131,12 @@ You get 32 storage slots (`slots[0..31]`) and helpers like `wmul`, `wdiv`, `sqrt
 A simple strategy that bumps fees up after large trades and decays back to a base fee otherwise:
 
 ```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {AMMStrategyBase} from "./AMMStrategyBase.sol";
+import {TradeInfo} from "./IAMMStrategy.sol";
+
 contract Strategy is AMMStrategyBase {
     function afterInitialize(uint256, uint256) external override returns (uint256, uint256) {
         slots[0] = bpsToWad(30); // starting fee
