@@ -24,7 +24,7 @@ def get_vanilla_bytecode_and_abi() -> Tuple[bytes, list]:
         contracts_dir = Path(__file__).parent.parent.parent / "contracts" / "src"
         source = (contracts_dir / "VanillaStrategy.sol").read_text()
         compiler = SolidityCompiler()
-        result = compiler.compile(source, contract_name="VanillaStrategy")
+        result = compiler.compile(source, contract_name="Strategy")
         if not result.success:
             raise RuntimeError(f"Failed to compile VanillaStrategy: {result.errors}")
         _CACHED_BYTECODE = result.bytecode

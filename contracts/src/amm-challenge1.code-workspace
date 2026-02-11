@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "amm-challenge1",
+			"path": "../../.."
+		},
+		{
+			"name": ".cursor",
+			"path": "../../../../amm-challenge/.cursor"
+		}
+	],
+	"settings": {}
+}

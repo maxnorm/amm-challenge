@@ -1,8 +1,12 @@
 """Command-line interface for running AMM simulations."""
 
 import argparse
+import faulthandler
 import sys
 from pathlib import Path
+
+# Dump Python traceback on segfault (e.g. in pyrevm/amm_sim_rs native code)
+faulthandler.enable()
 
 from amm_competition.competition.match import MatchRunner, HyperparameterVariance
 from amm_competition.evm.adapter import EVMStrategyAdapter
@@ -51,15 +55,18 @@ def run_match_command(args: argparse.Namespace) -> int:
             print(f"  - {error}")
         return 1
 
-    # Create strategy adapter
+    # Create strategy adapter (pyrevm deploys contract here)
+    print("Deploying strategy (EVM)...", flush=True)
     user_strategy = EVMStrategyAdapter(
         bytecode=compilation.bytecode,
         abi=compilation.abi,
     )
+    print("Getting strategy name...", flush=True)
     strategy_name = user_strategy.get_name()
     print(f"Strategy: {strategy_name}")
 
     # Load default 30bps strategy (used as the other AMM in simulation)
+    print("Loading baseline strategy...", flush=True)
     default_strategy = load_vanilla_strategy()
 
     # Configure simulation

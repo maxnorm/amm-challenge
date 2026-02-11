@@ -1,0 +1,9 @@
+---
+alwaysApply: true
+---
+
+For versionning, always create a new contract file with the suffix VX (X = version number)
+
+We will be able to refer to past implementation and see the progression of our strat.
+
+Always write the documentation of all the changes made inside the folder: /docs

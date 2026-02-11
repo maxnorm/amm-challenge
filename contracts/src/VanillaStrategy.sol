@@ -7,7 +7,7 @@ import {IAMMStrategy, TradeInfo} from "./IAMMStrategy.sol";
 /// @title Vanilla AMM Strategy
 /// @notice Default strategy with fixed 30 basis point fees
 /// @dev This runs as the second AMM in simulations to normalize scoring
-contract VanillaStrategy is AMMStrategyBase {
+contract Strategy is AMMStrategyBase {
     /// @notice Fixed fee in WAD (30 bps = 0.30% = 30e14)
     uint256 public constant FEE = 30 * BPS;
 

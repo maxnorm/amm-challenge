@@ -56,3 +56,5 @@ strategies/
 # Misc
 *.log
 .env
+
+out/

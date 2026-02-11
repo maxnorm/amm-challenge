@@ -1,0 +1,9 @@
+---
+alwaysApply: true
+---
+
+Do not change the Foundry configuration (e.g. foundry.toml, remappings, compiler settings like via_ir, optimizer, solc version, evm_version).
+
+We do not control the simulation environment. The build and run environment (including amm-match) uses the project’s existing config; changing it can break local or remote builds and simulations.
+
+If you hit stack-too-deep or other compiler limits, fix the strategy code (e.g. split logic into more private/view helpers, use temp slots) instead of modifying foundry.toml or compiler options.

@@ -169,8 +169,15 @@ contract Strategy is AMMStrategyBase {
 ## CLI
 
 ```bash
-# Build the Rust engine
+# Use a virtual environment (recommended)
+python3 -m venv .venv && source .venv/bin/activate   # Prefer Python 3.12 or 3.13 (see Troubleshooting)
+
+# Build the Rust engine (ensure Rust is installed: https://rustup.rs)
 cd amm_sim_rs && pip install maturin && maturin develop --release && cd ..
+
+# If you use Python 3.14+, set this before maturin (PyO3 supports up to 3.13 officially):
+# export PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
+# Note: Python 3.14 can cause a segfault in pyrevm when deploying strategies. Use Python 3.12 or 3.13 for the venv if you see "Segmentation fault" after "Compiling strategy...".
 
 # Install
 pip install -e .
@@ -186,3 +193,16 @@ amm-match validate my_strategy.sol
 ```
 
 Output is your average edge across simulations. The 30 bps normalizer typically scores around 250-350 edge depending on market conditions.
+
+### Troubleshooting
+
+- **Segmentation fault after "Compiling strategy..."**  
+  This is a known issue with **pyrevm on Python 3.14**. Use a virtual environment with **Python 3.12 or 3.13** (the crash happens during EVM contract deploy). Example with Python 3.12:
+  ```bash
+  sudo apt install python3.12-venv   # if needed
+  rm -rf .venv && python3.12 -m venv .venv && source .venv/bin/activate
+  # Then re-run: pip install maturin, build amm_sim_rs, pip install -e .
+  ```
+
+- **PyO3 / maturin on Python 3.14**  
+  When building the Rust engine, set `export PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1` before `maturin develop --release`.
